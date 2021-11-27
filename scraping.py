@@ -23,6 +23,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemispheres(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -104,10 +105,50 @@ def mars_facts():
     df.set_index('Description', inplace=True)
 
     #Convert df back to html-ready code, add bootstrap
-    return df.to_html(classes="table table-striped")
+    return df.to_html(classes="table table-striped table-dark")
 
-#Very Important last line!  #End the automated browsing session
-#browser.quit()
+# ## HEMISPHERES
+def hemispheres(browser):   
+# 1. Use browser to visit the URL 
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+    
+# 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+# 3. Write code to retrieve the image urls and titles for each hemisphere
+
+    for x in range(4):
+        #Parse 
+        html = browser.html
+        himg_soup = soup(html, 'html.parser')
+        
+        #Link to image page
+        browser.find_by_css('h3')[x].click()
+
+        #Parse new page 
+        html = browser.html
+        himg_soup = soup(html, 'html.parser')
+
+        #Get title
+        title = himg_soup.find('h2', class_='title').get_text()
+
+        #find the relative image url
+        categories = himg_soup.find_all('div', class_= "downloads")
+        for category in categories:
+            himg_url_rel = category.find('a')['href']
+
+        # Use the base url to create an absolute url
+        himg_url = f'https://marshemispheres.com/{himg_url_rel}'
+    
+        #append data to dictionary
+        hemisphere_image_urls.append({'img_url':himg_url,'title':title})
+
+        #go back a page
+        browser.back()
+    return hemisphere_image_urls
+
+
 #Tell Flask the script is complete and ready for action
 if __name__ == "__main__":
     #if running as script, print scraped data
